@@ -47,15 +47,8 @@ app.get("/download", async (req, res) => {
     const info = await ytdl.getInfo(url);
     const title = info.videoDetails.title;
 
-    // Filter out unwanted formats (e.g., "webm")
-    const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
-
-    if (audioFormats.length === 0) {
-      res.status(404).send("No audio formats available for this video.");
-      return;
-    }
-
-    const mp3Format = audioFormats.find(format => format.container === 'mp3');
+    // Find the MP3 format directly
+    const mp3Format = info.formats.find(format => format.container === 'mp3');
 
     if (!mp3Format) {
       res.status(404).send("MP3 format not available for this video.");

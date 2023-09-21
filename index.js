@@ -23,8 +23,8 @@ app.get('/download', async (req, res) => {
     // Pipe the audio stream into the response
     ytdl(videoURL, { quality: 'highestaudio' }).pipe(res);
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('Internal Server Error');
+    //console.error('Error:', error);
+    //res.status(500).send('Internal Server Error');
   }
 });
 

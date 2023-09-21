@@ -43,12 +43,30 @@ app.get("/download", async (req, res) => {
   const url = req.query.url;
   const type = "mp3"; // Set the type to "mp3" for audio download
 
-  res.header("Content-Disposition", `attachment; filename="file.${type}"`);
-  
   try {
-    ytdl(url, { filter: 'audioonly' }).pipe(res); // Download audio only
+    const info = await ytdl.getInfo(url);
+    const title = info.videoDetails.title;
+
+    // Filter out unwanted formats (e.g., "webm")
+    const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
+
+    if (audioFormats.length === 0) {
+      res.status(404).send("No audio formats available for this video.");
+      return;
+    }
+
+    const mp3Format = audioFormats.find(format => format.container === 'mp3');
+
+    if (!mp3Format) {
+      res.status(404).send("MP3 format not available for this video.");
+      return;
+    }
+
+    res.header("Content-Disposition", `attachment; filename="${title}.${type}"`);
+    ytdl(url, { format: mp3Format }).pipe(res); // Download audio in MP3 format
   } catch (err) {
     console.log(err);
+    res.status(500).send("An error occurred.");
   }
 });
 

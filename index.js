@@ -42,7 +42,9 @@ app.get("/download", async (req, res) => {
   const info = await ytdl.getInfo(url);
   const title = info.videoDetails.title;
 
-  res.header("Content-Disposition", `attachment;  filename="vivekfy.${title}"`);
+  res.setHeader('Content-Disposition', `attachment; filename="${title}.mp3"`);
+    res.setHeader('Content-Type', 'audio/mpeg');
+
   try {
     ytdl(url, { itag }).pipe(res);
   } catch (err) {

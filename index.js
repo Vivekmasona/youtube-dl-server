@@ -34,19 +34,27 @@ app.get("/get", async (req, res) => {
   res.send({ title, thumbnail, audioFormats, formats });
 });
 
-app.get("/video", async (req, res) => {
-  const url = req.query.url;
-  const itag = req.query.itag;
-  const type = req.query.type;
-
-  const info = await ytdl.getInfo(url);
-  const title = info.videoDetails.title;
-
-  res.header("Content-Disposition", `attachment;  filename="vivek💕${title}.mp4"`);
+app.get('/download', async (req, res) => {
   try {
-    ytdl(url, { itag }).pipe(res);
-  } catch (err) {
-    console.log(err);
+    const videoURL = req.query.url; // Get the YouTube video URL from the query parameter
+
+    if (!videoURL) {
+      return res.status(400).send('Missing video URL');
+    }
+
+    // Get information about the video (including title)
+    const info = await ytdl.getInfo(videoURL);
+    const title = info.videoDetails.title; // Get the video's title
+
+    // Set response headers to specify a downloadable file with the video's title
+    res.setHeader('Content-Disposition', `attachment; filename="${title}.mp3"`);
+    res.setHeader('Content-Type', 'audio/mpeg');
+
+    // Pipe the audio stream into the response
+    ytdl(videoURL, { quality: 'highestaudio' }).pipe(res);
+ } catch (error) {
+    //console.error('Error:', error);
+    //res.status(500).send('Internal Server Error');
   }
 });
 

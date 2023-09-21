@@ -1,34 +1,37 @@
 const express = require('express');
-const ytdl = require('ytdl-core');
-const fs = require('fs');
+const axios = require('axios');
 const app = express();
-const port = 3000;
+const port = 3000; // You can set your desired port number
 
-app.get('/download', async (req, res) => {
-  try {
-    const videoURL = req.query.url; // Get the YouTube video URL from the query parameter
+// Define a route to handle direct URL with parameters
+app.get('/download', (req, res) => {
+  const { url } = req.query; // Extract the 'url' parameter from the query string
 
-    if (!videoURL) {
-      return res.status(400).send('Missing video URL');
+  const options = {
+    method: 'GET',
+    url: 'https://youtube-mp3-download1.p.rapidapi.com/dl',
+    params: { id: url }, // Use the provided URL directly
+    headers: {
+      'X-RapidAPI-Key': 'dfb9b7d5b7msh58605fff4558064p180b18jsnce10425639e1',
+      'X-RapidAPI-Host': 'youtube-mp3-download1.p.rapidapi.com'
     }
+  };
 
-    // Get information about the video (including title)
-    const info = await ytdl.getInfo(videoURL);
-    const title = info.videoDetails.title; // Get the video's title
-
-    // Set response headers to specify a downloadable file with the video's title
-    res.setHeader('Content-Disposition', `attachment; filename="${title}.mp3"`);
-    res.setHeader('Content-Type', 'audio/mpeg');
-
-    // Pipe the audio stream into the response
-    ytdl(videoURL, { quality: 'highestaudio' }).pipe(res);
-  } catch (error) {
-    //console.error('Error:', error);
-    //res.status(500).send('Internal Server Error');
-  }
+  // Send a request to the external API
+  axios.request(options)
+    .then(function (response) {
+      // Handle the response data here
+      const responseData = response.data;
+      res.json(responseData); // Send the response back to the client
+    })
+    .catch(function (error) {
+      // Handle any errors that occur during the request
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' }); // Send an error response
+    });
 });
 
+// Start the server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
-  

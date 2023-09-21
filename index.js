@@ -1,37 +1,59 @@
-const express = require('express');
-const axios = require('axios');
+const express = require("express");
+const cors = require("cors");
+const ytdl = require("ytdl-core");
 const app = express();
-const port = 3000; // You can set your desired port number
+// const fs = require("fs");
 
-// Define a route to handle direct URL with parameters
-app.get('/download', (req, res) => {
-  const { url } = req.query; // Extract the 'url' parameter from the query string
+const corsOptions = {
+  origin: "https://vidr-sp.netlify.app", // change this origin as your like
+  // origin: "http://localhost:3000",
+  credentials: true, //access-control-allow-credentials:true
+  optionSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
 
-  const options = {
-    method: 'GET',
-    url: 'https://youtube-mp3-download1.p.rapidapi.com/dl',
-    params: { id: url }, // Use the provided URL directly
-    headers: {
-      'X-RapidAPI-Key': 'dfb9b7d5b7msh58605fff4558064p180b18jsnce10425639e1',
-      'X-RapidAPI-Host': 'youtube-mp3-download1.p.rapidapi.com'
-    }
-  };
+app.use(express.static("./static"));
+const port = process.env.PORT || 5000;
 
-  // Send a request to the external API
-  axios.request(options)
-    .then(function (response) {
-      // Handle the response data here
-      const responseData = response.data;
-      res.json(responseData); // Send the response back to the client
-    })
-    .catch(function (error) {
-      // Handle any errors that occur during the request
-      console.error(error);
-      res.status(500).json({ error: 'Internal Server Error' }); // Send an error response
-    });
+app.get("/", (res) => {
+  res.render("index.html");
 });
 
-// Start the server
+app.get("/get", async (req, res) => {
+  const url = req.query.url;
+  console.log(url);
+  const info = await ytdl.getInfo(url);
+  const title = info.videoDetails.title;
+  const thumbnail = info.videoDetails.thumbnails[0].url;
+  let formats = info.formats;
+
+  const audioFormats = ytdl.filterFormats(info.formats, "audioonly");
+  const format = ytdl.chooseFormat(info.formats, { quality: "136" });
+  formats = formats.filter((format) => format.hasAudio === true);
+
+  res.send({ title, thumbnail, audioFormats, formats });
+});
+
+app.get("/video", async (req, res) => {
+  const url = req.query.url;
+  const itag = req.query.itag;
+  const type = req.query.type;
+
+  const info = await ytdl.getInfo(url);
+  const title = info.videoDetails.title;
+
+  res.header("Content-Disposition", `attachment;  filename="vivek💕${title}.mp4"`);
+  try {
+    ytdl(url, { itag }).pipe(res);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+// app.get('*', (req, res) => {
+//   res.render('error')
+// })
+
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log("Running ...");
 });

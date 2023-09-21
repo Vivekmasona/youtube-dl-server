@@ -34,28 +34,24 @@ app.get("/get", async (req, res) => {
   res.send({ title, thumbnail, audioFormats, formats });
 });
 
+//const express = require('express');
+//const ytdl = require('ytdl-core');
+//const app = express();
+//const port = 3000;
+
 app.get("/download", async (req, res) => {
   const url = req.query.url;
-  const itag = req.query.itag;
-  const type = req.query.type;
+  const type = "mp3"; // Set the type to "mp3" for audio download
 
-  const info = await ytdl.getInfo(url);
-  const title = info.videoDetails.title;
-
-  res.setHeader('Content-Disposition', `attachment; filename="${title}.mp3"`);
-    res.setHeader('Content-Type', 'audio/mpeg');
-
+  res.header("Content-Disposition", `attachment; filename="file.${type}"`);
+  
   try {
-    ytdl(url, { itag }).pipe(res);
+    ytdl(url, { filter: 'audioonly' }).pipe(res); // Download audio only
   } catch (err) {
     console.log(err);
   }
 });
 
-// app.get('*', (req, res) => {
-//   res.render('error')
-// })
-
 app.listen(port, () => {
-  console.log("Running ...");
+  console.log("Server is running...");
 });
